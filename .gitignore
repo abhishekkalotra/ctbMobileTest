@@ -1,0 +1,32 @@
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies
+node_modules/
+
+# Generated Allure data and reports
+allure-results/
+allure-report/
+allure-current-run-results/
+allure-current-run-report/
+
+# Test artifacts and temporary output
+artifacts/
+coverage/
+dist/
+build/
+tmp/
+temp/
+*.log
+*.mp4
+*.webm
+*.png
+
+# Operating system files
+.DS_Store
+Thumbs.db
