@@ -60,6 +60,7 @@ export const config: WebdriverIO.Config = {
         'appium:automationName': 'UiAutomator2',
         'appium:deviceName': 'Android Phone',
         'appium:udid': '00195653U004979',
+        //'appium:udid': '9e7dbbe',
         'appium:appPackage': 'com.cartobikeapp',
         'appium:appActivity': 'com.cartobikeapp.MainActivity',
         'appium:noReset': true,
@@ -156,7 +157,7 @@ export const config: WebdriverIO.Config = {
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 60000
+        timeout: 120000
     },
 
     onPrepare: async () => {

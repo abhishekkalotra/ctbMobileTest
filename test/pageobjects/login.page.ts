@@ -8,6 +8,7 @@ class LoginPage extends BasePage {
     }
 
     public get passwordInput () {
+        // The observed Android hierarchy exposes email first and password second.
         return $('android=new UiSelector().className("android.widget.EditText").instance(1)')
     }
 
@@ -25,14 +26,17 @@ class LoginPage extends BasePage {
     public async waitForScreen (): Promise<void> {
         await this.signInTitle.waitForDisplayed()
         await this.emailInput.waitForDisplayed()
+        await this.passwordInput.waitForDisplayed()
     }
 
     public async isDisplayed (): Promise<boolean> {
         return (await this.signInTitle.isDisplayed().catch(() => false)) &&
-            (await this.emailInput.isDisplayed().catch(() => false))
+            (await this.emailInput.isDisplayed().catch(() => false)) &&
+            (await this.passwordInput.isDisplayed().catch(() => false))
     }
 
     public async clearForm (): Promise<void> {
+        await this.waitForScreen()
         await this.emailInput.clearValue()
         await this.passwordInput.clearValue()
     }

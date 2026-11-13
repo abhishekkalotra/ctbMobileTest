@@ -57,6 +57,23 @@ export async function startTestRecording(test: TestInfo): Promise<void> {
     }
 }
 
+/** Mark recordings that include helper-driven sign-in so credentials are masked on failure. */
+export async function markCurrentRecordingAsCredentialSensitive(rects: Rect[]): Promise<void> {
+    let attempt = artifactRuntime.__cartobikeAllureAttempt
+    if (!attempt || attempt.finished) {
+        attempt = {
+            title: 'CartoBike module navigation',
+            recording: false,
+            login: true,
+            redactionRects: [],
+            finished: false
+        }
+        artifactRuntime.__cartobikeAllureAttempt = attempt
+    }
+    attempt.login = true
+    attempt.redactionRects = rects.map(({ x, y, width, height }) => ({ x, y, width, height }))
+}
+
 /** WDIO wraps a beforeEach hook title around the test whose setup is running. */
 export function testInfoForHook(test: TestInfo): TestInfo {
     const wrappedTestTitle = test.title.match(/wrappedHook for ["'](.+?)["']$/)?.[1]

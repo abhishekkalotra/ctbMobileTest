@@ -8,6 +8,34 @@ import welcomePage from '../pageobjects/welcome.page.js'
 
 type AppState = 'login' | 'onboarding' | 'authenticated' | 'unknown'
 
+const SAFE_SCREEN_LABELS = [
+    'Sign in', 'Welcome back!', 'E-mail', 'Password', 'Log In', 'Forgot password?',
+    'Sign in with Google', 'Sign up here', 'Continue', 'Home', 'Message', 'Sell',
+    'Auctions', 'Profile', 'Account', 'Not now', 'Later', 'Skip', 'Close', 'Dismiss',
+    'Allow', "Don't allow", 'OK', 'Cancel', 'Retry'
+]
+
+/** Summarize only known static labels and element classes; never log arbitrary field text. */
+async function getSafeStartupDiagnostics (): Promise<string> {
+    const packageName = await driver.getCurrentPackage().catch(() => 'unavailable')
+    const source = await driver.getPageSource().catch(() => '')
+    const labels = SAFE_SCREEN_LABELS.filter(label =>
+        source.includes(`text="${label}"`) || source.includes(`content-desc="${label}"`))
+    const classes = new Map<string, number>()
+    for (const match of source.matchAll(/class="([^"]+)"/g)) {
+        const name = match[1]
+        if (!name) continue
+        classes.set(name, (classes.get(name) ?? 0) + 1)
+    }
+    const classSummary = [...classes.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([name, count]) => `${name}×${count}`)
+        .join(', ') || 'unavailable'
+
+    return `Current package: ${packageName}. Recognized UI labels: ${labels.join(', ') || 'none'}. Element classes: ${classSummary}.`
+}
+
 async function detectState (): Promise<AppState> {
     if (await loginPage.isDisplayed()) return 'login'
     if (await welcomePage.isContinueVisible()) return 'onboarding'
@@ -22,14 +50,20 @@ export async function prepareLoggedOutLoginState (): Promise<void> {
     })
 
     await step('Wait for a recognized app screen and dismiss known startup overlays', async () => {
-        await browser.waitUntil(async () => {
-            await welcomePage.dismissKnownStartupPopup()
-            return (await detectState()) !== 'unknown'
-        }, {
-            timeout: 30000,
-            interval: 500,
-            timeoutMsg: 'CartoBike did not reach Login, onboarding, or an authenticated screen within 30 seconds.'
-        })
+        try {
+            await browser.waitUntil(async () => {
+                await welcomePage.dismissKnownStartupPopup()
+                return (await detectState()) !== 'unknown'
+            }, {
+                timeout: 30000,
+                interval: 500,
+                timeoutMsg: 'CartoBike did not reach Login, onboarding, or an authenticated screen within 30 seconds.'
+            })
+        } catch (error) {
+            const diagnostics = await getSafeStartupDiagnostics()
+            const reason = error instanceof Error ? error.message : String(error)
+            throw new Error(`${reason} ${diagnostics}`)
+        }
     })
 
     let state = await detectState()
